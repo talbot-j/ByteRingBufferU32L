@@ -154,27 +154,99 @@ int main ( void )
 	printf("Ring buffer available space? %d\n", BYTE_RB_Avail_Space(pRingBuffer));
 	printf("Ring buffer available data? %d\n", BYTE_RB_Avail_Data(pRingBuffer));
 
-#if 0
-	writeNum = 100;
-	block_size = 5;
-	printf("Use \"Test_Block_Write()\" to write %d sequencial data starting at value = %d\n", block_size, writeNum);
-	Test_Block_Write(pRingBuffer, block_size, writeNum, 1);
-	printf("Ring buffer available space? %d\n", BYTE_RB_Avail_Space(pRingBuffer));
-	printf("Ring buffer available data? %d\n", BYTE_RB_Avail_Data(pRingBuffer));
-	BYTE_RB_Flush(pRingBuffer);
-	printf("Flushing buffer!  It should now be empty and the next reads should all fail.\n");
-	printf("Ring buffer available space? %d\n", BYTE_RB_Avail_Space(pRingBuffer));
-	printf("Ring buffer available data? %d\n", BYTE_RB_Avail_Data(pRingBuffer));
-	for ( idx = 0; idx < block_size; idx++)
-	{
-		Read_data_in_buffer(pRingBuffer);
+
+	/* testing of the "peek" function:
+	 	Steps:
+	 	Write some various strings to the ring buffer, lets say 0x55 and 0xAA.
+	 	We should verify the available data is 2.  The peek should report 
+	 	back a 0x55.  The sniff should report back 0xAA.  Then get the avail 
+	 	data again and it should still be equal to two.  Now read a byte.  A 
+	 	peek and sniff should both return the same value when the available 
+	 	data is 1.  Now write and read 12 items*/
+	uint8_t buf_data = 0;
+
+	BYTE_RB_Flush( &ringBufferA );
+
+	if ( BYTE_RB_Sniff ( &ringBufferA, &buf_data ) ) {
+		printf("Test Fail - Sniff should return false.\n");
+	}
+	if ( BYTE_RB_Peek ( &ringBufferA, &buf_data ) ) {
+		printf("Test Fail - Sniff should return false.\n");
+	}
+	if ( BYTE_RB_Avail_Data( &ringBufferA ) != 0 ) {
+		printf("Test Fail - Buffer should be empty.\n");
+		exit(1);
+	}
+	BYTE_RB_Write( &ringBufferA, 0x55 );
+	if ( BYTE_RB_Avail_Data( &ringBufferA ) != 1 ) {
+		printf("Test Fail - Buffer should be 1.\n");
+		exit(1);
+	}
+	if ( BYTE_RB_Sniff ( &ringBufferA, &buf_data ) ) {
+		printf("buf_data = 0x%X\n", buf_data);
+		if ( buf_data != 0x55 ) {
+			printf("Test Fail - Sniff should return 0x55.\n");
+			exit(1);
+		}
+	}
+	if ( BYTE_RB_Peek ( &ringBufferA, &buf_data ) ) {
+		printf("buf_data = 0x%X\n", buf_data);
+		if ( buf_data != 0x55 ) {
+			printf("Test Fail - Peek should return 0x55.\n");
+			exit(1);
+		}
+	}
+	if ( BYTE_RB_Avail_Data( &ringBufferA ) != 1 ) {
+		printf("Test Fail - Buffer should be 1.\n");
+		exit(1);
+	}
+	BYTE_RB_Write( &ringBufferA, 0xAA );
+	if ( BYTE_RB_Avail_Data( &ringBufferA ) != 2 ) {
+		printf("Test Fail - Buffer should be 2.\n");
+		exit(1);
+	}
+	if ( BYTE_RB_Sniff ( &ringBufferA, &buf_data ) ) {
+		printf("buf_data = 0x%X\n", buf_data);
+		if ( buf_data != 0xAA ) {
+			printf("Test Fail - Sniff should return 0xAA.\n");
+			exit(1);
+		}
+	}
+	if ( BYTE_RB_Peek ( &ringBufferA, &buf_data ) ) {
+		printf("buf_data = 0x%X\n", buf_data);
+		if ( buf_data != 0x55 ) {
+			printf("Test Fail - Peek should return 0x55.\n");
+			exit(1);
+		}
+	}
+	if ( BYTE_RB_Avail_Data( &ringBufferA ) != 2 ) {
+		printf("Test Fail - Buffer should be 2.\n");
+		exit(1);
+	}
+	/* test the ability of sniff to wrap around the buffer limits */
+	while ( BYTE_RB_Avail_Space( &ringBufferA ) ) {
+		BYTE_RB_Write( &ringBufferA, 0x01 );
+	}
+	
+	bufferA[10] = 0x02;
+	if ( BYTE_RB_Sniff ( &ringBufferA, &buf_data ) ) {
+		printf("buf_data = 0x%X\n", buf_data);
+		if ( buf_data != 0x02 ) {
+			printf("Test Fail - Sniff should return 0x02.\n");
+			exit(1);
+		}
+	}
+	/* test the ability of peek to wrap around the buffer limits */
+	while ( BYTE_RB_Avail_Data( &ringBufferA ) != 1 ) {
+		BYTE_RB_Read( &ringBufferA );
+	}
+	if ( BYTE_RB_Peek ( &ringBufferA, &buf_data ) ) {
+		printf("buf_data = 0x%X\n", buf_data);
+		if ( buf_data != 0x02 ) {
+			printf("Test Fail - Peek should return 0x02.\n");
+			exit(1);
+		}
 	}
 
-	uint8_t *ptrNum = &writeNum;
-	block_size = 25;
-	printf("Use \"BYTE_RB_pWrite()\" to write data = %d\n", *ptrNum);
-	BYTE_RB_pWrite(pRingBuffer, ptrNum);
-	Read_data_in_buffer(pRingBuffer);
-#endif
 	return 0;
 }
