@@ -227,8 +227,10 @@ int main ( void )
 	while ( BYTE_RB_Avail_Space( &ringBufferA ) ) {
 		BYTE_RB_Write( &ringBufferA, 0x01 );
 	}
-	
+
+	// cppcheck-suppress unreadVariable
 	bufferA[10] = 0x02;
+	                    
 	if ( BYTE_RB_Sniff ( &ringBufferA, &buf_data ) ) {
 		printf("buf_data = 0x%X\n", buf_data);
 		if ( buf_data != 0x02 ) {
