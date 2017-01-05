@@ -127,11 +127,7 @@ bool BYTE_RB_Peek ( BYTE_RB_U32L_T *buf, uint8_t *value )
 	bool valid = false;
 	/* if buffer has data then lets peek at the data the return it. */
 	if ( !BYTE_RB_Empty(buf) ) {
-		uint32_t tailp1 = buf->tail + 1;
-		if ( tailp1 == buf->size ) {
-			tailp1 = 0;
-		}
-		*value = buf->data[tailp1];
+		*value = buf->data[buf->tail];
 		valid = true;
 	}
 	return valid;
