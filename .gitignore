@@ -1,5 +1,5 @@
 *.o
-smRingBuffer_TEST
+ByteRingBufferU32L_TEST
 .tags*
 *.sublime-*
 dox/
