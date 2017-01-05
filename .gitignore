@@ -1,0 +1,6 @@
+*.o
+smRingBuffer_TEST
+.tags*
+*.sublime-*
+dox/
+Tests/
